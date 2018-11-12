@@ -1,12 +1,7 @@
 #coding=utf-8
 #!/usr/bin/env python3
 
-def intput():
-    return int(input())
-def writeline(list):
-    for i in range(len(list)):
-        list[i]=str(list[i])
-    print(" ".join(list))
+
 
 class Node:
     # val, left, right, father
@@ -23,27 +18,13 @@ class Node:
     def set_right(self, root_SubTree):
         root_SubTree.father = self
         self.right = root_SubTree
-    def print_mid(self):    #left, mid, right
+    def print_mid(self):
         if(self.left!=None):
             self.left.print_mid()
         if(self.val!=None):
-            print(self.val, end = ' ')
+            print(self.val)
         if(self.right!=None):
             self.right.print_mid()
-    def print_pre(self):    # mid, left, right
-        if(self.val!=None):
-            print(self.val, end = ' ')
-        if(self.left!=None):
-            self.left.print_pre()
-        if(self.right!=None):
-            self.right.print_pre()
-    def print_fol(self):    # left, right, mid
-        if(self.left!=None):
-            self.left.print_fol()
-        if(self.right!=None):
-            self.right.print_fol()
-        if(self.val!=None):
-            print(self.val, end = ' ')
     def find_node(self, val):
         if(self.val==val):
             return self
@@ -83,35 +64,58 @@ class BinTree:
         node_y.id = node_x.id*2+1
         self.nodes.update({node_y.id: node_y})
         node_x.set_right(node_y)
-    def print_mid(self):
+    def print(self):
         self.root.print_mid()
-        print()
-    def print_pre(self):
-        self.root.print_pre()
-        print()
-    def print_fol(self):
-        self.root.print_fol()
-        print()
+
+def LCA(x, y):
+    node_x = Tree.find(x)
+    node_y = Tree.find(y)
+    an_x = [x]
+    an_y = [y]
+    while(node_x!=Tree.root):
+        node_x = node_x.father
+        an_x.append(node_x.val)
+    while(node_y!=Tree.root):
+        node_y = node_y.father
+        an_y.append(node_y.val)
     
+    for i in range(min(len(an_x), len(an_y)),0,-1):
+        suffix_x = an_x[-i:]
+        suffix_y = an_y[-i:]
+        if(suffix_x == suffix_y):
+            print(suffix_x[0])
+            break
+
+
+inp = input().split()
+Tree = BinTree()
 
 def main():
-    root = intput()
-    M = intput()
+    son_pointer = 1
+    ### UNIQUE value this time
+    ### Store VALUE
 
-    Tree = BinTree()
-    Tree.set_root(root)
+    for i in range(len(inp)):
+        if(i==0):
+            Tree.set_root(int(inp[i]))
+        if(inp[i]=="None"):
+            continue
+        f = i
+        s1 = (son_pointer if son_pointer<len(inp) else None)
+        s2 = (son_pointer+1 if son_pointer+1<len(inp) else None)
+        
 
-    for i in range(M):
-        inp = input().split()
-        f = int(inp[0])
-        s = int(inp[1])
-        op = inp[2]
-        if(op=='L'):
-            Tree.insert_left(f,s)
-        else:
-            Tree.insert_right(f,s)
-        Tree.print_mid()
+        son_pointer+=2
+        #print(f, s1, s2)
+        if(s1!=None and inp[s1]!="None"):
+            Tree.insert_left(int(inp[f]),int(inp[s1]))
+        if(s2!=None and inp[s2]!="None"):
+            Tree.insert_right(int(inp[f]),int(inp[s2]))
 
+    x = int(input())
+    y = int(input())
+
+    LCA(x, y)
 
 if __name__=='__main__':
     main()

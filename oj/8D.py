@@ -1,12 +1,7 @@
 #coding=utf-8
 #!/usr/bin/env python3
 
-def intput():
-    return int(input())
-def writeline(list):
-    for i in range(len(list)):
-        list[i]=str(list[i])
-    print(" ".join(list))
+
 
 class Node:
     # val, left, right, father
@@ -23,27 +18,13 @@ class Node:
     def set_right(self, root_SubTree):
         root_SubTree.father = self
         self.right = root_SubTree
-    def print_mid(self):    #left, mid, right
+    def print_mid(self):
         if(self.left!=None):
             self.left.print_mid()
         if(self.val!=None):
-            print(self.val, end = ' ')
+            print(self.val)
         if(self.right!=None):
             self.right.print_mid()
-    def print_pre(self):    # mid, left, right
-        if(self.val!=None):
-            print(self.val, end = ' ')
-        if(self.left!=None):
-            self.left.print_pre()
-        if(self.right!=None):
-            self.right.print_pre()
-    def print_fol(self):    # left, right, mid
-        if(self.left!=None):
-            self.left.print_fol()
-        if(self.right!=None):
-            self.right.print_fol()
-        if(self.val!=None):
-            print(self.val, end = ' ')
     def find_node(self, val):
         if(self.val==val):
             return self
@@ -83,35 +64,45 @@ class BinTree:
         node_y.id = node_x.id*2+1
         self.nodes.update({node_y.id: node_y})
         node_x.set_right(node_y)
-    def print_mid(self):
+    def print(self):
         self.root.print_mid()
-        print()
-    def print_pre(self):
-        self.root.print_pre()
-        print()
-    def print_fol(self):
-        self.root.print_fol()
-        print()
-    
+
+
+
+inp = input().split()
+Tree = BinTree()
+MAX_DEPTH = 1
+
+def dfs(node, DepNow):
+    global MAX_DEPTH
+    if(node!=None):
+        MAX_DEPTH = max(MAX_DEPTH, DepNow)
+    if(node.left!=None):
+        dfs(node.left, DepNow+1)
+    if(node.right!=None):
+        dfs(node.right, DepNow+1)
 
 def main():
-    root = intput()
-    M = intput()
+    son_pointer = 1
+    ### Store VALUE
 
-    Tree = BinTree()
-    Tree.set_root(root)
+    for i in range(len(inp)):
+        if(i==0):
+            Tree.set_root(int(inp[i]))
+        if(inp[i]=="None"):
+            continue
+        f = i
+        s1 = (son_pointer if son_pointer<len(inp) else None)
+        s2 = (son_pointer+1 if son_pointer+1<len(inp) else None)
+        son_pointer+=2
+        #print(f, s1, s2)
+        if(s1!=None and inp[s1]!="None"):
+            Tree.insert_left(int(inp[f]),int(inp[s1]))
+        if(s2!=None and inp[s2]!="None"):
+            Tree.insert_right(int(inp[f]),int(inp[s2]))
 
-    for i in range(M):
-        inp = input().split()
-        f = int(inp[0])
-        s = int(inp[1])
-        op = inp[2]
-        if(op=='L'):
-            Tree.insert_left(f,s)
-        else:
-            Tree.insert_right(f,s)
-        Tree.print_mid()
-
+    dfs(Tree.root, 1)
+    print(MAX_DEPTH)
 
 if __name__=='__main__':
     main()
