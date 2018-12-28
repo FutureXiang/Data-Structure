@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="Logo">
+    <file>googlelogo_color_92x30dp.png</file>
+  </qresource>
+</RCC>

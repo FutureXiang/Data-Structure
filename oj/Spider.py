@@ -16,7 +16,7 @@ class Myparser(HTMLParser):
             # go find ''' <a href="xyjj/xyjs.htm" title="学院介绍">学院介绍</a> '''
             for (key, value) in attrs:
                 if(key=='href' and value!='#'):
-                    if(".htm" in value):
+                    if(".htm" in value) or (".html" in value) or (".org" in value) or (".com" in value) or (".cn" in value):
                         self.AllLinks.append(value)
 
 graph = {}
@@ -63,7 +63,14 @@ def BfsLinksWithDepth(MaxDepth, RootURL):
 def main():
     rootURL = input()
     BfsLinksWithDepth(2, rootURL)
-    print(len(graph.keys()))
+    print("All Nodes are shown below.")
+    for father in graph:
+        if(len(graph[father])!=0):
+            print("{} has {} sons : ".format(father, len(graph[father])))
+            print("{")
+            for son in graph[father]:
+                print("{}: {}".format(son, graph[father][son]))
+            print("}")
 
 if __name__=='__main__':
     main()

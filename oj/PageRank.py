@@ -19,7 +19,7 @@ class Myparser(HTMLParser):
             # go find ''' <a href="xyjj/xyjs.htm" title="学院介绍">学院介绍</a> '''
             for (key, value) in attrs:
                 if(key=='href' and value!='#'):
-                    if(".htm" in value):
+                    if(".htm" in value) or (".html" in value) or (".org" in value) or (".com" in value) or (".cn" in value):
                         self.AllLinks.append(value)
 
 graph = {}
