@@ -237,14 +237,14 @@ class System():
         
         seg_list = analyse.extract_tags(Query, 3, allowPOS=('n','nr','ns','nt','nz','nl','t','v','vn'))
         print("Query Splitted into : ", seg_list)
-        ResultPage = [] # [ (dist, Title, count, reRank) ]
+        ResultPage = [] # [ (dist, Title, count, reRank, URL) ]
         
         self.TopRankDict = {}
         for page in self.TopRank:
             self.TopRankDict.update({page['Title']: [word[0] for word in page['KeyWords']]})
         
         for page in self.TopRank:
-            tmp_result = [0, page["Title"], 0, 0]
+            tmp_result = [0, page["Title"], 0, 0, page["URL"]]
             for word in seg_list:
                 dist, count = word_page_Distance(word, page)
                 tmp_result[0] += dist

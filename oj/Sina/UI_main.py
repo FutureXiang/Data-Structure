@@ -11,6 +11,7 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         self.setWindowTitle("Let's Google the Sina News!")
 
         self.pushButton.clicked.connect(self.GetText)
+        self.textBrowser.setOpenExternalLinks(True)
 
         self.Sina = System()
         self.ShowHotWords()
@@ -28,17 +29,18 @@ class MyWindow(QMainWindow, Ui_MainWindow):
         
         self.ShowText("Top 10 Hot Words Today are : ")
         for i in range(10):
-            self.ShowText("{} ".format(TopWords[i][0]))
-        self.ShowText("--------------------")
+            if(i % 2 == 0):
+                self.ShowText(TopWords[i][0] + "　"*(10 - len(TopWords[i][0])) + TopWords[i+1][0])
+        self.ShowText("----------------------")
 
     def GetText(self):
         TextValue = self.lineEdit.text()
         tmp = self.Sina.SearchEngine(TextValue)
-        result = ""
-        for item in tmp:
-            result += "{}\n        with score {:.4f}\n".format(item[1], item[0])
-        self.ShowText(result)
+        self.ShowResult(tmp)
     
+    def ShowResult(self, content):
+        for item in content:
+            self.textBrowser.append('<a href="{}">{}</a>'.format(item[4], item[1])) # [ (dist, Title, count, reRank, URL) ]
     def ShowText(self, content):
         self.textBrowser.append(content)
 
