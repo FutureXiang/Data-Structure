@@ -19,8 +19,7 @@ from tqdm import tqdm
 import jieba
 import jieba.analyse as analyse
 
-
-
+from gensim.models import word2vec
 
 
 
@@ -61,9 +60,12 @@ class System():
         self.DEPTH = 4
         self.ALPHA = 0.85
         self.ITERATION = 150
-        self.TOPRANKRATE = 0.05
+        self.TOPRANKRATE = 0.10 # PageRank top pages
+        self.TOPRANKCOUNT = 25  # TextRank top words
         self.PKL = "./Info.pkl"
-        self.SHOWRESULTNUM = 5
+        self.SHOWRESULTNUM = 10
+        self.MARGIN = 0.5
+        
         
         self.rootURL = "https://news.sina.com.cn/"
         self.graph = {}
@@ -72,6 +74,8 @@ class System():
         self.Statistic = {}
         self.SkipWords = ["新浪", "新闻", "微信", "猛料", "二维码", "版权所有", "责任编辑", "报道", "邮箱", "扫描", "举报", "官方", "长安街", "知事"]
         self.TopRank = None
+        self.TopRankDict = None
+        self.model = word2vec.Word2Vec.load("word2vec_model")
         # TopRank = [ { "Title": "abcdef", 
         #               "Value": 0.012345,
         #               "URL": "https://www.baidu.com",
@@ -195,7 +199,7 @@ class System():
 
     def GetKeyWords(self, URL):
         text = self.GetAllText(URL)
-        AnaRes = analyse.extract_tags(text, 50, withWeight=True, allowPOS=('nz', 'nt', 'ns', 'n', 'vn', 'v'))
+        AnaRes = jieba.analyse.textrank(text, self.TOPRANKCOUNT, withWeight=True, allowPOS=('n','nr','ns','nt','nz','nl','t','v','vn'))
         return AnaRes
 
     def GlobalStatistic(self, word, weight):
@@ -208,33 +212,75 @@ class System():
             self.Statistic[word] += weight
 
     def SearchEngine(self, Query):
-        ResultPage = []
+
+        def word_word_Distance(word1, word2):
+            if(word1 in word2):
+                return 1
+            else:
+                try:
+                    score =self.model.wv.similarity(word1, word2)
+                    score = (score if score > self.MARGIN else 0)
+                    return score * 0.05
+                except:
+                    return word1 in word2
+
+        def word_page_Distance(word, page):
+            KeyWordsWithWeight = page["KeyWords"]   # [["aaa", 0.01], ["bbb", 0.001]]
+            res = 0.0
+            count = 0.0
+            for wordBox in KeyWordsWithWeight:
+                if(word in wordBox[0]):
+                    count += 1
+                tmp = wordBox[1] * word_word_Distance(word, wordBox[0])
+                res += tmp
+            return res, count
+        
+        seg_list = analyse.extract_tags(Query, 3, allowPOS=('n','nr','ns','nt','nz','nl','t','v','vn'))
+        print("Query Splitted into : ", seg_list)
+        ResultPage = [] # [ (dist, Title, count, reRank) ]
+        
+        self.TopRankDict = {}
         for page in self.TopRank:
-            Title = page["Title"]
-            KeyWordsWithWeight = page["KeyWords"]
-            tmp_sum = 0.0
-            for word in KeyWordsWithWeight:
-                if(Query in word[0]):
-                    tmp_sum += word[1]
-            ResultPage.append((tmp_sum, Title))
-        ResultPage = sorted(ResultPage, reverse = True, key = lambda x: x[0])
+            self.TopRankDict.update({page['Title']: [word[0] for word in page['KeyWords']]})
+        
+        for page in self.TopRank:
+            tmp_result = [0, page["Title"], 0, 0]
+            for word in seg_list:
+                dist, count = word_page_Distance(word, page)
+                tmp_result[0] += dist
+                tmp_result[2] += count
+                tmp_result[3] += (1 if(word in self.TopRankDict[page["Title"]][:5]) else 0)
+            ResultPage.append(tuple(tmp_result))
+        ResultPage.sort(reverse = True, key = lambda x: x[0])
+        ResultPage.sort(reverse = True, key = lambda x: x[2])
+
+        print("********** BEFORE Re-Ranking **********")
+        for page in ResultPage[:self.SHOWRESULTNUM]:
+            print(page[1], page[3])
+        
+        ResultPage.sort(reverse = True, key = lambda x: x[3])
+
+        print("********** AFTER  Re-Ranking **********")
+        for page in ResultPage[:self.SHOWRESULTNUM]:
+            print(page[1], page[3])
         
         return ResultPage[:self.SHOWRESULTNUM]
 
     def GetAllNewsInfo(self):
-        if(os.path.exists(self.PKL)):
+        path = os.path.join(os.getcwd(), self.PKL)
+        if(os.path.exists(path)):
             print("******************** Loading Info Existed ********************")
-            with open(self.PKL, 'rb') as f:
+            with open(path, 'rb') as f:
                 self.TopRank = pickle.load(f)
         
         else:
             print("******************** Generating Info from Spider ********************")
             self.BfsLinksWithDepth(self.DEPTH, self.rootURL)
             self.GetMarkovMatrix()
-            TopRank = self.PageRank(self.ALPHA, self.ITERATION, int(self.TOPRANKRATE * self.N), self.rootURL)
+            self.TopRank = self.PageRank(self.ALPHA, self.ITERATION, int(self.TOPRANKRATE * self.N), self.rootURL)
 
             for i in tqdm(range(len(self.TopRank)), desc="Calculating Scores"):
-                item = TopRank[i]
+                item = self.TopRank[i]
                 ret = self.GetKeyWords(item['URL'])
                 tmp = []
                 for word in ret:
@@ -242,10 +288,11 @@ class System():
                     score = word[1]
                     score = score * item['Value']       # KeyWord Score = Analysis * PageRank
                     tmp.append((word_text, score))
+                tmp.sort(reverse=True, key=lambda x: x[1])
                 item.update({'KeyWords': tmp})
         
             with open(self.PKL, 'wb') as f:
-                pickle.dump(TopRank, f)
+                pickle.dump(self.TopRank, f)
 
 def main():
 
