@@ -63,7 +63,7 @@ class System():
         self.TOPRANKRATE = 0.10 # PageRank top pages
         self.TOPRANKCOUNT = 25  # TextRank top words
         self.PKL = "./Info.pkl"
-        self.SHOWRESULTNUM = 10
+        self.SHOWRESULTNUM = 5
         self.MARGIN = 0.5
         
         
@@ -235,7 +235,7 @@ class System():
                 res += tmp
             return res, count
         
-        seg_list = analyse.extract_tags(Query, 3, allowPOS=('n','nr','ns','nt','nz','nl','t','v','vn'))
+        seg_list = jieba.lcut(Query, cut_all = False)
         print("Query Splitted into : ", seg_list)
         ResultPage = [] # [ (dist, Title, count, reRank, URL) ]
         
@@ -249,20 +249,25 @@ class System():
                 dist, count = word_page_Distance(word, page)
                 tmp_result[0] += dist
                 tmp_result[2] += count
-                tmp_result[3] += (1 if(word in self.TopRankDict[page["Title"]][:5]) else 0)
+                flag = 0
+                for word5 in self.TopRankDict[page["Title"]][:5]:
+                    if(word in word5):
+                        flag = 1
+                        break
+                tmp_result[3] += flag
             ResultPage.append(tuple(tmp_result))
         ResultPage.sort(reverse = True, key = lambda x: x[0])
         ResultPage.sort(reverse = True, key = lambda x: x[2])
 
-        print("********** BEFORE Re-Ranking **********")
-        for page in ResultPage[:self.SHOWRESULTNUM]:
-            print(page[1], page[3])
+        # print("********** BEFORE Re-Ranking **********")
+        # for page in ResultPage[:self.SHOWRESULTNUM]:
+            # print(page[1], page[3])
         
         ResultPage.sort(reverse = True, key = lambda x: x[3])
 
-        print("********** AFTER  Re-Ranking **********")
-        for page in ResultPage[:self.SHOWRESULTNUM]:
-            print(page[1], page[3])
+        # print("********** AFTER  Re-Ranking **********")
+        # for page in ResultPage[:self.SHOWRESULTNUM]:
+            # print(page[1], page[3])
         
         return ResultPage[:self.SHOWRESULTNUM]
 
