@@ -63,7 +63,7 @@ class System():
         self.TOPRANKRATE = 0.10 # PageRank top pages
         self.TOPRANKCOUNT = 25  # TextRank top words
         self.PKL = "./Info.pkl"
-        self.SHOWRESULTNUM = 5
+        self.SHOWRESULTNUM = 10
         self.MARGIN = 0.5
         
         
@@ -259,15 +259,15 @@ class System():
         ResultPage.sort(reverse = True, key = lambda x: x[0])
         ResultPage.sort(reverse = True, key = lambda x: x[2])
 
-        # print("********** BEFORE Re-Ranking **********")
-        # for page in ResultPage[:self.SHOWRESULTNUM]:
-            # print(page[1], page[3])
+        print("********** BEFORE Re-Ranking **********")
+        for page in ResultPage[:self.SHOWRESULTNUM]:
+            print(page[1], page[3], self.TopRankDict[page[1]][:5])
         
         ResultPage.sort(reverse = True, key = lambda x: x[3])
 
-        # print("********** AFTER  Re-Ranking **********")
-        # for page in ResultPage[:self.SHOWRESULTNUM]:
-            # print(page[1], page[3])
+        print("********** AFTER  Re-Ranking **********")
+        for page in ResultPage[:self.SHOWRESULTNUM]:
+            print(page[1], page[3], self.TopRankDict[page[1]][:5])
         
         return ResultPage[:self.SHOWRESULTNUM]
 
