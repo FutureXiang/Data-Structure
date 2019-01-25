@@ -60,7 +60,7 @@ class System():
         self.DEPTH = 4
         self.ALPHA = 0.85
         self.ITERATION = 150
-        self.TOPRANKRATE = 0.10 # PageRank top pages
+        self.TOPRANKRATE = 0.30 # PageRank top pages
         self.TOPRANKCOUNT = 25  # TextRank top words
         self.PKL = "./Info.pkl"
         self.SHOWRESULTNUM = 10
